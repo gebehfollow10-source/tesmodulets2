@@ -35,7 +35,7 @@ pre{background:#070c16;border:1px solid var(--line);border-radius:10px;padding:1
 <label class="file">📁 Folder Mod<input id="folder" type="file" webkitdirectory directory multiple></label>
 <button class="btn" onclick="clearAll()">× Bersihkan</button>
 </div>
-<div class="small" style="margin-top:9px">Semua pemeriksaan dilakukan di browser. Mod tidak di-upload ke server. Mode sinkron hanya menggabungkan tampilan saat preview; isi file SII tidak diubah.</div>
+<div class="small" style="margin-top:9px">Preview maksimal 14 baris. Semua pemeriksaan dilakukan di browser. Mod tidak di-upload ke server. Mode sinkron hanya menggabungkan tampilan saat preview; isi file SII tidak diubah.</div>
 <div class="progress" style="margin-top:12px"><div id="bar" class="bar"></div></div>
 <div id="status" class="status muted">Belum ada mod dimuat.</div>
 </section>
@@ -200,7 +200,7 @@ let previewRows=[];
 let lastFrames=[];
 function getVisibleTracks(){
  const tracks=window.previewTracks||[];
- return window.syncAll===true?tracks:(tracks.length?[tracks[Math.max(0,Number($("patternSelect").value)-1)]]:[]);
+ return window.syncAll===true?tracks.slice(0,14):(tracks.length?[tracks[Math.max(0,Number($("patternSelect").value)-1)]]:[]);
 }
 function buildPreview(){
  const grid=$("ledGrid"); if(!grid)return;
