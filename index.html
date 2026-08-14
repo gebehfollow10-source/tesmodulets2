@@ -17,10 +17,10 @@ button:hover,.filebtn:hover{border-color:#5b6878}.filebtn input{display:none}.to
 .actions{display:flex;gap:8px;margin-top:8px}.actions button{flex:1}.run{background:#df1830;border-color:#df1830}
 .board{margin:14px auto 0;background:#020304;border:1px solid #1e252d;border-radius:12px;padding:16px;min-height:280px;max-width:620px;overflow:auto;transform:scale(var(--preview-scale,.88));transform-origin:top center;margin-bottom:-34px}
 #ledGrid{display:flex;flex-direction:row;justify-content:center;align-items:center;gap:4px;min-height:270px;height:270px}
-.row{display:flex;flex-direction:column;gap:1px;height:100%;justify-content:center;align-items:center;min-width:var(--led-min,24px)}
+.row{display:flex;flex-direction:column;gap:1px;justify-content:center;align-items:center;min-width:var(--led-min,24px)}
+.trackLine{display:flex;flex-direction:row;gap:1px;justify-content:center;align-items:center}
 .dot{width:var(--s);height:var(--s);flex:0 0 var(--s);border-radius:50%;background:#111820}
-.row.on .dot{background:var(--c);box-shadow:0 0 4px var(--c),0 0 11px var(--c)}
-.row.dim .dot{background:var(--c);opacity:.45}
+.dot.on{background:var(--c);box-shadow:0 0 4px var(--c),0 0 11px var(--c)}
 .meta{display:flex;justify-content:space-between;color:#7d8998;font-size:11px;margin-top:8px}
 #issues{white-space:pre-wrap}.filelist{max-height:240px;overflow:auto}
 @media(max-width:650px){.controls{grid-template-columns:1fr}.wrap{padding:10px}.board{min-height:270px;max-width:100%;padding:8px;transform:scale(var(--preview-scale,.84));margin-bottom:-43px}.ledGrid{min-height:260px;height:260px;gap:2px}.row{gap:1px;min-width:var(--led-min,24px)}}
@@ -29,7 +29,7 @@ button:hover,.filebtn:hover{border-color:#5b6878}.filebtn input{display:none}.to
 <body>
 <div class="wrap">
 <h1>🚛 SCS Mod Tester</h1>
-<div class="muted">Urutan LED mengikuti posisi asli di file SII, termasuk karakter angka dan huruf. Maksimal 20 baris preview.</div>
+<div class="muted">Urutan LED mengikuti posisi asli di file SII, termasuk karakter angka dan huruf. Arah nyala mengikuti pola dari kanan ke kiri (samping); LED atas/bawah hanya menambah tinggi.</div>
 
 <section class="panel">
 <div class="toolbar">
@@ -42,6 +42,16 @@ button:hover,.filebtn:hover{border-color:#5b6878}.filebtn input{display:none}.to
 </section>
 
 <section class="panel">
+<h2>Pilih SII untuk Preview</h2>
+<div class="toolbar" style="margin-bottom:10px">
+<button type="button" id="selectAllSii">Pilih Semua</button>
+<button type="button" id="selectNoneSii">Kosongkan Pilihan</button>
+</div>
+<div id="siiSelector" class="filelist muted">Belum ada file SII.</div>
+<div class="muted" style="font-size:11px;margin-top:7px">Hanya file SII yang dicentang yang akan dijalankan di preview.</div>
+</section>
+
+<section class="panel">
 <h2>🔦 Preview Lampu / Blink</h2>
 <div class="preview">
 <div class="controls">
@@ -49,6 +59,8 @@ button:hover,.filebtn:hover{border-color:#5b6878}.filebtn input{display:none}.to
 <label>Ukuran LED: <b id="ledSizeText">24px</b><input id="ledSize" type="range" min="8" max="40" step="1" value="24"></label>
 <label>Kecepatan: <b id="speedText">0.07s</b><input id="speed" type="range" min=".02" max=".30" step=".01" value=".07"></label>
 <label>Brightness: <b id="brightText">100%</b><input id="bright" type="range" min="20" max="100" value="100"></label>
+<label>Jumlah LED Samping: <b id="ledCountText">30</b><input id="ledCount" type="range" min="1" max="120" step="1" value="30"></label>
+<label>LED Atas / Bawah: <b id="ledVerticalText">1</b><input id="ledVertical" type="range" min="1" max="20" step="1" value="1"></label>
 </div>
 <div class="actions">
 <button type="button" id="smallPreview">Kecil</button>
@@ -74,12 +86,27 @@ button:hover,.filebtn:hover{border-color:#5b6878}.filebtn input{display:none}.to
 <script>
 (function(){
 "use strict";
-const state={sii:new Map(),tracks:[],rows:[],running:false,start:0,raf:0};
+const state={sii:new Map(),selected:new Set(),tracks:[],rows:[],running:false,start:0,raf:0,ledCount:30,ledVertical:1};
 const $=id=>document.getElementById(id);
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));
 function status(msg,cls="muted"){ $("status").className=cls; $("status").textContent=msg; }
-function color(model){
- const s=String(model||"").toLowerCase();
+function color(text){
+ const raw=String(text||"");
+ const s=raw.toLowerCase();
+ // Ambil warna RGB/rgba/hex yang benar-benar tertulis di SII.
+ const hex=raw.match(/#([0-9a-f]{6}|[0-9a-f]{3})\b/i);
+ if(hex){
+   const h=hex[1];
+   return h.length===3 ? "#"+h.split("").map(x=>x+x).join("") : "#"+h;
+ }
+ const rgb=raw.match(/(?:rgb|color)\s*[:=]?\s*\(?\s*([0-9.]+)\s*[,;]\s*([0-9.]+)\s*[,;]\s*([0-9.]+)/i);
+ if(rgb){
+   let vals=[+rgb[1],+rgb[2],+rgb[3]];
+   // SCS/SII umumnya memakai 0..1, tetapi dukung juga 0..255.
+   if(vals.every(v=>v<=1)) vals=vals.map(v=>Math.round(v*255));
+   else vals=vals.map(v=>Math.round(Math.max(0,Math.min(255,v))));
+   return `rgb(${vals[0]},${vals[1]},${vals[2]})`;
+ }
  if(s.includes("blue"))return "#36a5ff";
  if(s.includes("red"))return "#ff405c";
  if(s.includes("green"))return "#38df7a";
@@ -87,21 +114,27 @@ function color(model){
  if(s.includes("orange"))return "#ff9f3f";
  if(s.includes("white"))return "#f4f7ff";
  if(s.includes("amber"))return "#ffc04a";
+ if(s.includes("cyan")||s.includes("turquoise"))return "#32e8e8";
+ if(s.includes("purple")||s.includes("violet"))return "#b56cff";
+ if(s.includes("pink"))return "#ff65b5";
  return "#5ca9ff";
 }
 function parse(text,name){
- const patterns=[...text.matchAll(/blink_pattern\s*:\s*"([^"]*)"/gi)].map(m=>m[1].replace(/[\r\n]/g,""));
+ const patterns=[...text.matchAll(/blink_pattern\s*:\s*"((?:\\.|[^"\\])*)"/gi)].map(m=>m[1].replace(/\\"/g,'"').replace(/[\r\n]/g,""));
  const step=Number((text.match(/blink_step_length\s*:\s*([0-9.]+)/i)||[])[1]||.07);
  const models=[...text.matchAll(/\bmodel\s*:\s*"([^"]+)"/gi)].map(m=>m[1]);
+ // Simpan sumber warna dari SII: color:, rgb(...), atau model.
+ const colorFields=[...text.matchAll(/\bcolor\s*:\s*(?:\(([^)]*)\)|"([^"]+)"|([^\n\r]+))/gi)].map(m=>m[1]||m[2]||m[3]).filter(Boolean);
  const errs=[];
  if(!/SiiNunit/i.test(text)) errs.push("Header SiiNunit tidak ditemukan");
  let a=0,b=0; for(const ch of text){if(ch==="{")a++;else if(ch==="}")b++}
  if(a!==b) errs.push("Braket SII tidak seimbang");
- return {name,patterns,step,model:models[0]||"",errors:errs};
+ return {name,patterns,step,model:models[0]||"",colorSource:colorFields[0]||models[0]||"",errors:errs};
 }
 function addSii(name,text){
  const p=parse(text,name);
  state.sii.set(name,{text,parsed:p});
+ state.selected.add(name);
 }
 async function importSiiFile(f){
  const text=await f.text(); addSii(f.webkitRelativePath||f.name,text);
@@ -143,41 +176,90 @@ async function process(list){
 function rebuild(){
  state.tracks=[];
  for(const [name,v] of state.sii){
+  if(!state.selected.has(name)) continue;
   v.parsed.patterns.forEach((pat,i)=>{
-   if(pat)state.tracks.push({name,index:i,pattern:pat,step:v.parsed.step,color:color(v.parsed.model)});
+   if(pat)state.tracks.push({name,index:i,pattern:pat,step:v.parsed.step,color:color(v.parsed.colorSource)});
   });
  }
- const visible=state.tracks.slice(0,20);
+ const visible=state.tracks;
  const grid=$("ledGrid"); grid.innerHTML=""; state.rows=[];
- if(!visible.length){grid.innerHTML='<div class="muted" style="text-align:center">Tidak ada blink_pattern ditemukan.</div>';return;}
- const size=30;
+ if(!visible.length){grid.innerHTML='<div class="muted" style="text-align:center">Tidak ada blink_pattern ditemukan.</div>'; $("frameText").textContent="FRAME 0/0"; $("countText").textContent="POLA 0 • LED 0"; return;}
  for(const t of visible){
-  const row=document.createElement("div");row.className="row off";row.style.setProperty("--c",t.color);
-  const s=Number($('ledSize')?.value||24);
-  row.style.setProperty("--s",s+"px");
-  const frag=document.createDocumentFragment(),dots=[];
-  for(let i=0;i<t.pattern.length;i++){const d=document.createElement("i");d.className="dot";dots.push(d);frag.appendChild(d)}
+  const row=document.createElement("div");row.className="row";row.style.setProperty("--c",t.color);
+  const s=Number($('ledSize')?.value||24); row.style.setProperty("--s",s+"px");
+  const frag=document.createDocumentFragment();
+  for(let v=0;v<state.ledVertical;v++){
+    const line=document.createElement("div"); line.className="trackLine";
+    for(let i=0;i<state.ledCount;i++){const d=document.createElement("i");d.className="dot";line.appendChild(d)}
+    frag.appendChild(line);
+  }
   row.appendChild(frag);grid.appendChild(row);state.rows.push({t,row});
  }
  $("files").innerHTML=[...state.sii.keys()].map(x=>"<div style='padding:5px;border-bottom:1px solid #27313d'>"+esc(x)+"</div>").join("");
- $("issues").innerHTML=[...state.sii.values()].flatMap(v=>v.parsed.errors).length?
-   [...state.sii.values()].flatMap(v=>v.parsed.errors).map(x=>'<div class="error">'+esc(x)+'</div>').join(""):'<span class="ok">✓ SII berhasil dibaca.</span>';
+ renderSiiSelector();
+ const errs=[...state.sii.values()].flatMap(v=>v.parsed.errors);
+ $("issues").innerHTML=errs.length?errs.map(x=>'<div class="error">'+esc(x)+'</div>').join(""):'<span class="ok">✓ SII berhasil dibaca.</span>';
  paint(0);
 }
+
+function renderSiiSelector(){
+ const box=$("siiSelector");
+ if(!state.sii.size){box.textContent="Belum ada file SII.";return;}
+ box.innerHTML=[...state.sii.keys()].map((name,i)=>{
+   const id="siiPick_"+i;
+   return '<label style="display:flex;align-items:center;gap:8px;padding:7px 4px;border-bottom:1px solid #27313d;cursor:pointer">'+
+     '<input type="checkbox" id="'+id+'" data-sii-index="'+i+'" '+(state.selected.has(name)?"checked":"")+'>'+
+     '<span style="overflow-wrap:anywhere">'+esc(name)+'</span></label>';
+ }).join("");
+ box.querySelectorAll("input[data-sii-index]").forEach(cb=>cb.addEventListener("change",()=>{
+   const name=[...state.sii.keys()][Number(cb.getAttribute("data-sii-index"))];
+   if(cb.checked) state.selected.add(name); else state.selected.delete(name);
+   rebuild();
+   if(state.selected.size) start(); else stop();
+ }));
+}
+function selectAllSii(on){
+ state.selected.clear();
+ if(on) for(const name of state.sii.keys()) state.selected.add(name);
+ renderSiiSelector();
+ rebuild();
+}
+
+function isOnChar(ch){
+ const c=String(ch||"");
+ if(!c || c==="0" || c==="-" || c==="." || /\s/.test(c)) return false;
+ if(c.toLowerCase()==="x") return true;
+ if(/[1-9]/.test(c)) return true;
+ return /[a-z]/i.test(c);
+}
 function paint(elapsed){
- const bright=Number($("bright").value)/100;
+ const bright=Math.max(.2,Number($("bright").value||100)/100);
  let total=0,frame=0;
  state.rows.forEach((r,i)=>{
-   const p=r.t.pattern,step=Math.max(.001,Number($("speed").value)||r.t.step||.07);
-   const f=Math.floor(elapsed/step)%p.length,ch=p.charAt(f)||"-";
-   r.row.className="row "+(ch==="X"?"on":ch==="x"?"dim":"off");
-   frame=i===0?f:frame;total+=p.length;
+   const p=String(r.t.pattern||"");
+   const step=Math.max(.001,Number($("speed").value)||r.t.step||.07);
+   const f=p.length?Math.floor(elapsed/step)%p.length:0;
+   const active=isOnChar(p.charAt(f));
+   const lines=r.row.querySelectorAll(".trackLine");
+   const dotsPerLine=state.ledCount;
+   lines.forEach(line=>{
+     const dots=line.children;
+     for(let j=0;j<dots.length;j++) dots[j].className="dot";
+     if(active && dots.length){
+       // Karakter/pola pertama selalu mulai dari LED paling kanan, lalu ke kiri.
+       const pos=dots.length-1-(f%dots.length);
+       if(pos>=0 && pos<dots.length) dots[pos].classList.add("on");
+     }
+   });
+   frame=i===0?f:frame;
+   total+=dotsPerLine*state.ledVertical;
  });
  $("ledGrid").style.opacity=bright;
  const first=state.rows[0]?.t;
- $("frameText").textContent="FRAME "+(first?frame+1:0)+"/"+(first?.pattern.length||0);
+ $("frameText").textContent="FRAME "+(first?(frame+1):0)+"/"+(first?.pattern.length||0);
  $("countText").textContent="POLA "+state.rows.length+" • LED "+total;
 }
+
 function loop(t){
  if(!state.running)return;
  paint((t-state.start)/1000);
@@ -185,7 +267,7 @@ function loop(t){
 }
 function start(){stop();state.running=true;state.start=performance.now();state.raf=requestAnimationFrame(loop)}
 function stop(){state.running=false;if(state.raf)cancelAnimationFrame(state.raf);state.raf=0;paint(0)}
-function clearAll(){stop();state.sii.clear();state.tracks=[];state.rows=[];$("ledGrid").innerHTML='<div class="muted" style="text-align:center">Belum ada SII</div>';$("files").textContent="Belum ada file."; $("issues").textContent="Belum ada hasil.";status("Siap. Pilih file untuk mulai.")}
+function clearAll(){stop();state.sii.clear();state.selected.clear();state.tracks=[];state.rows=[];$("ledGrid").innerHTML='<div class="muted" style="text-align:center">Belum ada SII</div>';$("files").textContent="Belum ada file."; $("issues").textContent="Belum ada hasil.";status("Siap. Pilih file untuk mulai.")}
 $("siiFile").addEventListener("change",e=>process([...e.target.files]));
 $("zipFile").addEventListener("change",e=>process([...e.target.files]));
 $("folderFile").addEventListener("change",e=>process([...e.target.files]));
@@ -193,6 +275,8 @@ $("smallPreview").addEventListener("click",()=>{$("previewSize").value=70;applyP
 $("normalPreview").addEventListener("click",()=>{$("previewSize").value=88;applyPreviewSize()});
 $("largePreview").addEventListener("click",()=>{$("previewSize").value=105;applyPreviewSize()});
 $("runBtn").addEventListener("click",start);$("stopBtn").addEventListener("click",stop);$("clearBtn").addEventListener("click",clearAll);
+$("selectAllSii").addEventListener("click",()=>selectAllSii(true));
+$("selectNoneSii").addEventListener("click",()=>selectAllSii(false));
 $("speed").addEventListener("input",e=>{ $("speedText").textContent=Number(e.target.value).toFixed(2)+"s"; paint((performance.now()-state.start)/1000)});
 $("bright").addEventListener("input",e=>{ $("brightText").textContent=e.target.value+"%"; paint((performance.now()-state.start)/1000)});
 function applyPreviewSize(){
@@ -208,8 +292,21 @@ function applyLedSize(){
 }
 $("previewSize").addEventListener("input",applyPreviewSize);
 $("ledSize").addEventListener("input",applyLedSize);
+$("ledCount").addEventListener("input",e=>{
+ state.ledCount=Number(e.target.value)||30;
+ $("ledCountText").textContent=state.ledCount;
+ if(state.sii.size) rebuild();
+});
+$("ledVertical").addEventListener("input",e=>{
+ state.ledVertical=Number(e.target.value)||1;
+ $("ledVerticalText").textContent=state.ledVertical;
+ if(state.sii.size) rebuild();
+});
 applyPreviewSize();
 applyLedSize();
+$("ledCountText").textContent=state.ledCount;
+$("ledVerticalText").textContent=state.ledVertical;
+
 window.addEventListener("resize",()=>{if(state.sii.size)rebuild()});
 window.addEventListener("error",e=>status("JavaScript error: "+e.message,"error"));
 })();
