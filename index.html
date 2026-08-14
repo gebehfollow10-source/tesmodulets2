@@ -13,17 +13,17 @@ h1{margin:0 0 5px}.muted{color:var(--muted)}button,.filebtn,select{border:1px so
 button:hover,.filebtn:hover{border-color:#5b6878}.filebtn input{display:none}.toolbar{display:flex;flex-wrap:wrap;gap:8px}
 #status{margin-top:10px;min-height:20px}.error{color:#ff667a}.ok{color:#43db82}
 .preview{background:#05070a;border:1px solid #222a34;border-radius:12px;padding:10px}
-.controls{display:grid;grid-template-columns:1fr 1fr;gap:10px}.controls input{width:100%}
+.controls{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.controls input{width:100%}
 .actions{display:flex;gap:8px;margin-top:8px}.actions button{flex:1}.run{background:#df1830;border-color:#df1830}
-.board{margin:8px auto 0;background:#020304;border:1px solid #1e252d;border-radius:9px;padding:5px;min-height:300px;max-width:430px;overflow:hidden}
-#ledGrid{display:flex;flex-direction:row;justify-content:center;align-items:center;gap:2px;min-height:290px;height:290px}
-.row{display:flex;flex-direction:column;gap:1px;height:100%;justify-content:center;align-items:center;min-width:0}
+.board{margin:14px auto 0;background:#020304;border:1px solid #1e252d;border-radius:12px;padding:16px;min-height:280px;max-width:620px;overflow:auto;transform:scale(var(--preview-scale,.88));transform-origin:top center;margin-bottom:-34px}
+#ledGrid{display:flex;flex-direction:row;justify-content:center;align-items:center;gap:4px;min-height:270px;height:270px}
+.row{display:flex;flex-direction:column;gap:1px;height:100%;justify-content:center;align-items:center;min-width:var(--led-min,24px)}
 .dot{width:var(--s);height:var(--s);flex:0 0 var(--s);border-radius:50%;background:#111820}
 .row.on .dot{background:var(--c);box-shadow:0 0 4px var(--c),0 0 11px var(--c)}
 .row.dim .dot{background:var(--c);opacity:.45}
 .meta{display:flex;justify-content:space-between;color:#7d8998;font-size:11px;margin-top:8px}
 #issues{white-space:pre-wrap}.filelist{max-height:240px;overflow:auto}
-@media(max-width:650px){.controls{grid-template-columns:1fr}.wrap{padding:10px}.board{min-height:300px;max-width:360px;padding:3px}.ledGrid{min-height:290px;height:290px;gap:1px}.row{gap:0}}
+@media(max-width:650px){.controls{grid-template-columns:1fr}.wrap{padding:10px}.board{min-height:270px;max-width:100%;padding:8px;transform:scale(var(--preview-scale,.84));margin-bottom:-43px}.ledGrid{min-height:260px;height:260px;gap:2px}.row{gap:1px;min-width:var(--led-min,24px)}}
 </style>
 </head>
 <body>
@@ -45,10 +45,15 @@ button:hover,.filebtn:hover{border-color:#5b6878}.filebtn input{display:none}.to
 <h2>🔦 Preview Lampu / Blink</h2>
 <div class="preview">
 <div class="controls">
+<label>Ukuran Preview: <b id="previewSizeText">88%</b><input id="previewSize" type="range" min="50" max="120" step="1" value="88"></label>
+<label>Ukuran LED: <b id="ledSizeText">24px</b><input id="ledSize" type="range" min="8" max="40" step="1" value="24"></label>
 <label>Kecepatan: <b id="speedText">0.07s</b><input id="speed" type="range" min=".02" max=".30" step=".01" value=".07"></label>
 <label>Brightness: <b id="brightText">100%</b><input id="bright" type="range" min="20" max="100" value="100"></label>
 </div>
 <div class="actions">
+<button type="button" id="smallPreview">Kecil</button>
+<button type="button" id="normalPreview">Normal</button>
+<button type="button" id="largePreview">Besar</button>
 <button id="runBtn" class="run">▶ JALANKAN</button><button id="stopBtn">■ STOP</button>
 </div>
 <div class="board"><div id="ledGrid"><div class="muted" style="text-align:center">Belum ada SII</div></div></div>
@@ -145,10 +150,10 @@ function rebuild(){
  const visible=state.tracks.slice(0,20);
  const grid=$("ledGrid"); grid.innerHTML=""; state.rows=[];
  if(!visible.length){grid.innerHTML='<div class="muted" style="text-align:center">Tidak ada blink_pattern ditemukan.</div>';return;}
- const size=Math.max(3,Math.min(12,Math.floor((grid.clientHeight||290)/Math.max(...visible.map(t=>t.pattern.length),1))-1));
+ const size=30;
  for(const t of visible){
   const row=document.createElement("div");row.className="row off";row.style.setProperty("--c",t.color);
-  const s=Math.max(3,Math.min(12,Math.floor((grid.clientHeight||290)/Math.max(t.pattern.length,1))-1));
+  const s=Number($('ledSize')?.value||24);
   row.style.setProperty("--s",s+"px");
   const frag=document.createDocumentFragment(),dots=[];
   for(let i=0;i<t.pattern.length;i++){const d=document.createElement("i");d.className="dot";dots.push(d);frag.appendChild(d)}
@@ -184,9 +189,27 @@ function clearAll(){stop();state.sii.clear();state.tracks=[];state.rows=[];$("le
 $("siiFile").addEventListener("change",e=>process([...e.target.files]));
 $("zipFile").addEventListener("change",e=>process([...e.target.files]));
 $("folderFile").addEventListener("change",e=>process([...e.target.files]));
+$("smallPreview").addEventListener("click",()=>{$("previewSize").value=70;applyPreviewSize()});
+$("normalPreview").addEventListener("click",()=>{$("previewSize").value=88;applyPreviewSize()});
+$("largePreview").addEventListener("click",()=>{$("previewSize").value=105;applyPreviewSize()});
 $("runBtn").addEventListener("click",start);$("stopBtn").addEventListener("click",stop);$("clearBtn").addEventListener("click",clearAll);
 $("speed").addEventListener("input",e=>{ $("speedText").textContent=Number(e.target.value).toFixed(2)+"s"; paint((performance.now()-state.start)/1000)});
 $("bright").addEventListener("input",e=>{ $("brightText").textContent=e.target.value+"%"; paint((performance.now()-state.start)/1000)});
+function applyPreviewSize(){
+ const v=Number($("previewSize").value||88);
+ document.documentElement.style.setProperty("--preview-scale",(v/100).toFixed(2));
+ $("previewSizeText").textContent=v+"%";
+}
+function applyLedSize(){
+ const v=Number($("ledSize").value||24);
+ document.documentElement.style.setProperty("--led-min",v+"px");
+ $("ledSizeText").textContent=v+"px";
+ if(state.sii.size) rebuild();
+}
+$("previewSize").addEventListener("input",applyPreviewSize);
+$("ledSize").addEventListener("input",applyLedSize);
+applyPreviewSize();
+applyLedSize();
 window.addEventListener("resize",()=>{if(state.sii.size)rebuild()});
 window.addEventListener("error",e=>status("JavaScript error: "+e.message,"error"));
 })();
