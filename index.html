@@ -4,322 +4,191 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>SCS Mod Tester</title>
-<script src="jszip.min.js"></script><script>if(!window.JSZip){document.write('<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"><\/script>')}</script>
+<script src="./jszip.min.js"></script>
 <style>
-:root{--bg:#0b1020;--panel:#121a2d;--panel2:#18233b;--text:#edf3ff;--muted:#98a7c4;--line:#2b3b60;--accent:#69a2ff;--ok:#38d27c;--bad:#ff667d;--warn:#ffc857}
-*{box-sizing:border-box}body{margin:0;background:linear-gradient(135deg,#080d19,#101b31);color:var(--text);font:14px system-ui,Arial,sans-serif}
-.wrap{max-width:1250px;margin:auto;padding:20px}.hero{padding:24px 0}.hero h1{font-size:30px;margin:0 0 5px}.muted,.small{color:var(--muted)}.panel{background:rgba(18,26,45,.96);border:1px solid var(--line);border-radius:16px;padding:16px;margin:14px 0}
-.toolbar{display:flex;gap:9px;flex-wrap:wrap}.btn,.file,select{background:var(--panel2);border:1px solid var(--line);border-radius:10px;color:var(--text);padding:10px 13px;cursor:pointer}.btn:hover,.file:hover{border-color:var(--accent)}input[type=file]{display:none}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:11px}.card{background:#0d1527;border:1px solid var(--line);border-radius:12px;padding:14px}.card h2{margin:3px 0;font-size:25px}.ok{color:var(--ok)}.bad{color:var(--bad)}.warn{color:var(--warn)}
-table{width:100%;border-collapse:collapse}th,td{text-align:left;padding:8px;border-bottom:1px solid var(--line);vertical-align:top}th{color:#bed0f6}.list{max-height:300px;overflow:auto}
-pre{background:#070c16;border:1px solid var(--line);border-radius:10px;padding:12px;white-space:pre-wrap;word-break:break-word;max-height:430px;overflow:auto}
-.progress{height:9px;background:#070c16;border-radius:99px;overflow:hidden}.bar{height:100%;width:0;background:var(--accent);transition:.2s}.status{margin-top:8px}
-.preview-shell{background:#090b10;border:1px solid #252b35;border-radius:16px;padding:9px;box-shadow:0 16px 50px rgba(0,0,0,.35)}
-.preview-controls{background:#0d1016;border:1px solid #272d37;border-radius:13px;padding:10px;display:grid;grid-template-columns:1fr 1fr;gap:9px}.range-box{min-width:0}.range-head{display:flex;justify-content:space-between;color:#9aa4b4;font-size:10px;margin-bottom:3px;text-transform:uppercase;letter-spacing:.5px}.range-box input{width:100%;accent-color:#ef233c}.preview-actions{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;margin-top:8px}.preview-actions .btn{padding:9px 7px;background:#171b22;border-color:#292f3a;font-weight:700;font-size:11px}.preview-actions .run{background:#e7192d;border-color:#e7192d;color:white}.preview-actions .full{background:#171b22}.led-frame{margin-top:9px;background:#030507;border:1px solid #222833;border-radius:13px;padding:12px 10px 10px;overflow:hidden}.led-board{height:260px;display:flex;align-items:center;justify-content:flex-start;overflow-x:auto;overflow-y:hidden;direction:ltr;background:#020304;border-radius:8px}.led-grid{width:100%;min-width:100%;height:100%;display:flex;flex-direction:column;justify-content:center;gap:12px;padding:10px;box-sizing:border-box}.led-row{display:flex;flex-direction:row;align-items:center;gap:3px;width:100%;min-height:18px;overflow:hidden}.led-dot{flex:0 0 var(--led-size,12px);width:var(--led-size,12px);height:var(--led-size,12px);aspect-ratio:1;border-radius:50%;background:#0a0e12;box-shadow:inset 0 0 1px rgba(255,255,255,.05);transition:background .025s linear,box-shadow .025s linear,transform .025s linear}.led-row.on .led-dot{background:var(--lamp-color);box-shadow:0 0 4px var(--lamp-color),0 0 9px var(--lamp-color),0 0 16px var(--lamp-color);transform:scale(1.08)}.led-row.dim .led-dot{background:var(--lamp-color);opacity:.45;box-shadow:0 0 4px var(--lamp-color)}.led-row.off .led-dot{opacity:1}.linear-caption{display:flex;justify-content:space-between;color:#596273;font-size:9px;padding:0 3px 5px;text-transform:uppercase;letter-spacing:.4px}.led-status{display:flex;justify-content:space-between;align-items:center;padding:7px 3px 0;color:#7f8898;font-size:10px;text-transform:uppercase;letter-spacing:.4px}.led-status b{color:#aeb7c5}.pattern-label{display:none}.pattern-row{display:contents}.pattern-cells{display:none}.strobe{display:none}.strobo{display:none}.lightstage{display:block;min-height:0;background:transparent;border:0;border-radius:0;padding:0}.bus{display:block;width:100%;min-height:0;border:0;border-radius:0;background:transparent;box-shadow:none;padding:0}.bus:before,.window,.rear,.head{display:none}.light-info{justify-content:space-between;gap:8px;margin-top:7px;padding:0 3px;font-size:10px;color:#707a8a}.light-info span:first-child{display:none}
-@media(max-width:700px){.preview-controls{grid-template-columns:1fr 1fr}.led-board{height:230px}.led-grid{padding:8px;gap:1px}.led-row{gap:1px}.led-status{font-size:9px}.preview-actions .btn{font-size:10px;padding:8px 4px}}
-@media(max-width:700px){.wrap{padding:12px}.hero h1{font-size:24px}.lamp.l{left:25px}.lamp.r{right:25px}}
+:root{--bg:#080b11;--panel:#111720;--line:#27313d;--text:#edf2f7;--muted:#8995a3;--accent:#e51d35}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:14px Arial,sans-serif}
+.wrap{max-width:1200px;margin:auto;padding:18px}.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:15px;margin:12px 0}
+h1{margin:0 0 5px}.muted{color:var(--muted)}button,.filebtn,select{border:1px solid var(--line);background:#19212b;color:var(--text);border-radius:9px;padding:10px 13px;cursor:pointer}
+button:hover,.filebtn:hover{border-color:#5b6878}.filebtn input{display:none}.toolbar{display:flex;flex-wrap:wrap;gap:8px}
+#status{margin-top:10px;min-height:20px}.error{color:#ff667a}.ok{color:#43db82}
+.preview{background:#05070a;border:1px solid #222a34;border-radius:12px;padding:10px}
+.controls{display:grid;grid-template-columns:1fr 1fr;gap:10px}.controls input{width:100%}
+.actions{display:flex;gap:8px;margin-top:8px}.actions button{flex:1}.run{background:#df1830;border-color:#df1830}
+.board{margin-top:10px;background:#020304;border:1px solid #1e252d;border-radius:9px;padding:12px;min-height:190px;overflow:hidden}
+#ledGrid{display:flex;flex-direction:column;justify-content:center;gap:8px;min-height:160px}
+.row{display:flex;flex-direction:row-reverse;gap:3px;width:100%;align-items:center}
+.dot{width:var(--s);height:var(--s);flex:0 0 var(--s);border-radius:50%;background:#111820}
+.row.on .dot{background:var(--c);box-shadow:0 0 4px var(--c),0 0 11px var(--c)}
+.row.dim .dot{background:var(--c);opacity:.45}
+.meta{display:flex;justify-content:space-between;color:#7d8998;font-size:11px;margin-top:8px}
+#issues{white-space:pre-wrap}.filelist{max-height:240px;overflow:auto}
+@media(max-width:650px){.controls{grid-template-columns:1fr}.wrap{padding:10px}.board{min-height:160px}}
 </style>
 </head>
 <body>
 <div class="wrap">
-<header class="hero">
 <h1>🚛 SCS Mod Tester</h1>
-<div class="muted">Tester browser untuk mod SCS/ETS2/ATS — file SII, SCS ZIP, dan folder mod.</div>
-</header>
+<div class="muted">Import SII / SCS / ZIP langsung di browser. Maksimal 14 baris preview.</div>
 
 <section class="panel">
-<h2 style="margin-top:0">📦 Masukkan Mod</h2>
 <div class="toolbar">
-<label class="file">📄 File .SII<input id="sii" type="file" multiple accept=".sii"></label>
-<label class="file">📦 File .SCS / .ZIP<input id="archive" type="file" multiple accept=".scs,.zip"></label>
-<label class="file">📁 Folder Mod<input id="folder" type="file" webkitdirectory directory multiple></label>
-<button class="btn" onclick="clearAll()">× Bersihkan</button>
+<label class="filebtn">📄 Pilih SII <input id="siiFile" type="file" accept=".sii,.SII" multiple></label>
+<label class="filebtn">📦 Pilih SCS / ZIP <input id="zipFile" type="file" accept=".scs,.SCS,.zip,.ZIP,application/zip,application/x-zip-compressed" multiple></label>
+<label class="filebtn">📁 Pilih Folder <input id="folderFile" type="file" webkitdirectory directory multiple></label>
+<button id="clearBtn">× Bersihkan</button>
 </div>
-<div class="small" style="margin-top:9px">Preview maksimal 14 baris. Semua pemeriksaan dilakukan di browser. Mod tidak di-upload ke server. Mode sinkron hanya menggabungkan tampilan saat preview; isi file SII tidak diubah.</div>
-<div class="progress" style="margin-top:12px"><div id="bar" class="bar"></div></div>
-<div id="status" class="status muted">Belum ada mod dimuat.</div>
-</section>
-
-<section id="summary" class="panel"><div class="muted">Masukkan mod untuk memulai pemeriksaan.</div></section>
-
-<section class="panel">
-<h2 style="margin-top:0">🧪 Pemeriksaan Mod</h2>
-<div id="checks" class="grid"></div>
+<div id="status" class="muted">Siap. Pilih file untuk mulai.</div>
 </section>
 
 <section class="panel">
-<h2 style="margin-top:0">🔦 Preview Lampu / Blink</h2>
-<div class="preview-shell">
-  <div class="preview-controls">
-    <div class="range-box"><div class="range-head"><span>Kecepatan script</span><b id="speedVal">0.07s</b></div><input id="speedRange" type="range" min="0.02" max="0.30" step="0.01" value="0.07"></div>
-    <div class="range-box"><div class="range-head"><span>Brightness</span><b id="brightVal">100%</b></div><input id="brightRange" type="range" min="20" max="100" step="1" value="100"></div>
-  </div>
-  <div class="preview-actions">
-    <button class="btn run" onclick="startPreview()">▶ JALANKAN</button>
-    <button class="btn" onclick="stopPreview()">■ STOP</button>
-    <button class="btn full" onclick="togglePreviewFullscreen()">⛶ FULLSCREEN</button>
-  </div>
-  <div class="led-frame">
-    <div class="linear-caption"><span>PREVIEW LURUS</span><span>X = NYALA • - = MATI</span></div>
-    <div class="led-board"><div id="ledGrid" class="led-grid"></div></div>
-    <div class="led-status"><span id="ledStatus">STATUS: SIAP</span><span id="ledFrame">FRAME: 0/0</span><span id="ledTotal">POLA AKTIF: 0 • TOTAL: 0</span></div>
-  </div>
+<h2>🔦 Preview Lampu / Blink</h2>
+<div class="preview">
+<div class="controls">
+<label>Kecepatan: <b id="speedText">0.07s</b><input id="speed" type="range" min=".02" max=".30" step=".01" value=".07"></label>
+<label>Brightness: <b id="brightText">100%</b><input id="bright" type="range" min="20" max="100" value="100"></label>
 </div>
-<div class="toolbar" style="margin-top:10px">
-<select id="patternSelect" style="flex:1"></select>
-<button class="btn" onclick="quickPreview()">⚡ Test Nyala</button>
+<div class="actions">
+<button id="runBtn" class="run">▶ JALANKAN</button><button id="stopBtn">■ STOP</button>
 </div>
-<div id="lightState" style="text-align:center;font-weight:700;margin-top:8px">MATI</div>
-<div class="light-info"><span>🔵 X = NYALA • − = MATI • pola SII asli</span><span>•</span><span id="frameInfo">Frame 0</span></div>
+<div class="board"><div id="ledGrid"><div class="muted" style="text-align:center">Belum ada SII</div></div></div>
+<div class="meta"><span id="frameText">FRAME 0/0</span><span id="countText">POLA 0 • LED 0</span></div>
+</div>
 </section>
 
 <section class="panel">
-<h2 style="margin-top:0">📋 Error & Warning</h2>
-<div id="issues" class="list muted">Belum ada hasil.</div>
+<h2>📋 Status Import</h2>
+<div id="issues" class="muted">Belum ada hasil.</div>
 </section>
-
 <section class="panel">
-<h2 style="margin-top:0">📂 File yang Ditemukan</h2>
-<div id="files" class="list muted">Belum ada file.</div>
-</section>
-
-<section class="panel">
-<h2 style="margin-top:0">🔎 Isi SII</h2>
-<select id="siiSelect"></select>
-<pre id="source">Pilih file SII.</pre>
+<h2>📂 File SII Ditemukan</h2>
+<div id="files" class="filelist muted">Belum ada file.</div>
 </section>
 </div>
 
-<script>
-const db=new Map(), siiData=new Map(); let timer=null,running=false,pos=0,pattern="";
-const $=id=>document.getElementById(id);
-function esc(x){return String(x).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
-function setStatus(x){$("status").textContent=x}
-function progress(x){$("bar").style.width=x+"%"}
-function addFile(name,text){db.set(name,text); if(/\.sii$/i.test(name))siiData.set(name,text)}
-async function readArchive(file){
-  if(!window.JSZip) throw Error("JSZip tidak tersedia. Jika dibuka dari GitHub Pages, pastikan jszip.min.js ada di folder yang sama dengan index.html.");
-  const buf=await file.arrayBuffer();
-  let zip;
-  try{ zip=await JSZip.loadAsync(buf,{checkCRC32:false,createFolders:false}); }
-  catch(err){ throw Error("File "+file.name+" bukan ZIP/SCS yang bisa dibaca browser, atau arsip rusak."); }
-  const entries=Object.values(zip.files).filter(x=>!x.dir);
-  let count=0;
-  for(const e of entries){
-    const name=e.name;
-    // Hanya baca teks yang relevan agar import SCS besar tidak membuat browser lag.
-    if(/\.(sii|sii\.bak|txt)$/i.test(name)){
-      const text=await e.async("text");
-      addFile(name,text); count++;
-    }
-  }
-  if(!count) throw Error("Tidak menemukan file .sii di dalam "+file.name);
-}
-async function readPlain(file){
-  const text=await file.text();
-  addFile(file.webkitRelativePath||file.name,text);
-}
-async function processFiles(list){
-  try{
-    setStatus("Membaca "+list.length+" file...");
-    let imported=0;
-    for(const f of list){
-      const lower=(f.name||"").toLowerCase();
-      if(lower.endsWith('.scs')||lower.endsWith('.zip')){ await readArchive(f); imported++; }
-      else if(lower.endsWith('.sii')){ await readPlain(f); imported++; }
-    }
-    if(!imported) throw Error("Format file tidak didukung. Pilih .SII, .SCS, atau .ZIP.");
-    run();
-  }catch(e){
-    console.error(e);
-    setStatus("Gagal import: "+e.message);
-    $("issues").innerHTML='<div class="bad" style="padding:10px">'+esc(e.message)+"</div>";
-  }
-}
-$("sii").onchange=e=>processFiles([...e.target.files]);
-$("archive").onchange=e=>processFiles([...e.target.files]);
-$("folder").onchange=e=>processFiles([...e.target.files]);
-function parseSii(text){
- const lines=text.split(/\r?\n/), issues=[];
- if(!/^\s*SiiNunit\b/m.test(text))issues.push(["error","Header SiiNunit tidak ditemukan"]);
- let op=0,cl=0; for(const c of text){if(c==="{")op++;if(c==="}")cl++}
- if(op!==cl)issues.push(["error",`Braket tidak seimbang: { ${op} / } ${cl}`]);
- if(/^\s*include\s*:/m.test(text)&&!/@include|include\s*:/m.test(text))issues.push(["warning","Referensi include perlu diperiksa"]);
- const pats=[...text.matchAll(/blink_pattern\s*:\s*"([^"]*)"/g)].map(x=>x[1].replace(/\s+/g,""));
- const step=(text.match(/blink_step_length\s*:\s*([0-9.]+)/)||[])[1];
- const models=[...text.matchAll(/\bmodel\s*:\s*"([^"]+)"/g)].map(x=>x[1]);
- const units=[...text.matchAll(/^\s*([A-Za-z0-9_:.@-]+)\s*\{/gm)].map(x=>x[1]).filter(x=>x!=="SiiNunit");
- for(const m of models) if(!findRef(m)) issues.push(["warning","Model reference tidak ditemukan di file yang dimuat: "+m]);
- return {lines:lines.length,blocks:units.length,pats,step,models,issues};
-}
-function findRef(ref){
- if(db.has(ref))return true;
- const r=ref.replace(/^\/+/,"");
- for(const k of db.keys())if(k.endsWith(r)||k.endsWith(r.replace(/\\/g,"/")))return true;
- return false;
-}
-function run(){
- try {
- const names=[...db.keys()].sort((a,b)=>a.localeCompare(b,undefined,{numeric:true}));
- let all=[],totalBlocks=0,totalPatterns=0;
- for(const [name,text] of siiData){const p=parseSii(text);all.push([name,p]);totalBlocks+=p.blocks;totalPatterns+=p.pats.length}
- $("summary").innerHTML=`<div class="grid">
- <div class="card"><div class="small">TOTAL FILE</div><h2>${names.length}</h2></div>
- <div class="card"><div class="small">SII</div><h2>${siiData.size}</h2></div>
- <div class="card"><div class="small">BLOK</div><h2>${totalBlocks}</h2></div>
- <div class="card"><div class="small">PATTERN</div><h2>${totalPatterns}</h2></div></div>`;
- const issues=all.flatMap(([n,p])=>p.issues.map(x=>[n,...x]));
- $("issues").innerHTML=issues.length?issues.map(x=>`<div style="padding:8px;border-bottom:1px solid var(--line)"><b class="${x[1]==='error'?'bad':'warn'}">${x[1].toUpperCase()}</b> — <b>${esc(x[0])}</b><br>${esc(x[2])}</div>`).join(""):'<span class="ok">✓ Tidak ada error dasar.</span>';
- const filesBox=$("files"); if(filesBox) filesBox.innerHTML=names.map(n=>`<div style="padding:5px;border-bottom:1px solid var(--line)">${esc(n)}</div>`).join("");
- const ss=$("siiSelect"); if(ss){ ss.innerHTML=[...siiData.keys()].map(n=>`<option>${esc(n)}</option>`).join(""); ss.onchange=()=>showSource(ss.value); if(ss.value)showSource(ss.value); }
- const checkCounts={valid:all.filter(x=>!x[1].issues.some(i=>i[0]==="error")).length,err:issues.filter(x=>x[1]==="error").length,warn:issues.filter(x=>x[1]==="warning").length};
- $("checks").innerHTML=`
- <div class="card"><div class="small">STRUKTUR SII</div><h2 class="${checkCounts.err?'bad':'ok'}">${checkCounts.err?'✕':'✓'}</h2><div>${checkCounts.err} error</div></div>
- <div class="card"><div class="small">DEPENDENSI MODEL</div><h2 class="${checkCounts.warn?'warn':'ok'}">${checkCounts.warn?'!':'✓'}</h2><div>${checkCounts.warn} warning</div></div>
- <div class="card"><div class="small">FILE VALID</div><h2 class="ok">${checkCounts.valid}</h2><div>dari ${all.length} SII</div></div>`;
- updatePatterns(all);
- setStatus(`Selesai: ${names.length} file dimuat.`);
- } catch(e) { console.error(e); setStatus("Gagal memproses hasil import: "+e.message); $("issues").innerHTML='<div class="bad" style="padding:10px">'+esc(e.message)+"</div>'; }
-}
-function showSource(n){const el=$("source"); if(el) el.textContent=siiData.get(n)||"Pilih file SII."}
-function colorFromModel(model){
- const m=String(model||'').toLowerCase();
- if(m.includes('blue'))return '#3aa0ff';
- if(m.includes('red'))return '#ff405c';
- if(m.includes('green'))return '#35e27a';
- if(m.includes('yellow'))return '#ffd447';
- if(m.includes('orange'))return '#ff9d3a';
- if(m.includes('white'))return '#f5f8ff';
- if(m.includes('amber'))return '#ffbf45';
- return '#69a2ff';
-}
-function updatePatterns(all){
- const sel=$("patternSelect");
- const tracks=[];
- for(const [n,p] of all){
-   p.pats.forEach((x,i)=>tracks.push({
-     name:n,index:i,pattern:(x||'').replace(/\s+/g,''),step:Number(p.step||.05),color:colorFromModel(p.models?.[0])
-   }));
- }
- window.previewTracks=tracks;
- const syncStep=tracks.length ? Math.min(...tracks.map(t=>t.step||.05)) : .05;
- const options=[{name:"SEMUA FILE SII — Main Bersamaan",index:-1,pattern:"",step:syncStep,color:'#69a2ff'}].concat(tracks);
- sel.innerHTML=options.map((t,i)=>`<option value="${i}">${esc(t.name)}${t.index>=0?" — Pattern #"+(t.index+1):""}</option>`).join('');
- sel.onchange=()=>{
-   const a=options[+sel.value];
-   window.syncAll=(a?.index===-1);
-   pattern=a?.pattern||'';
-   window.currentStep=Number(a?.step||.05);
-   pos=0; paint();
- };
- sel.value='0'; window.syncAll=true; pattern=''; window.currentStep=syncStep; pos=0; paint();
-}
-let previewBuiltKey='';
-let previewRows=[];
-let lastFrames=[];
-function getVisibleTracks(){
- const tracks=window.previewTracks||[];
- return window.syncAll===true?tracks.slice(0,14):(tracks.length?[tracks[Math.max(0,Number($("patternSelect").value)-1)]]:[]);
-}
-function buildPreview(){
- const grid=$("ledGrid"); if(!grid)return;
- const visible=getVisibleTracks();
- const key=visible.map(t=>(t.name||'')+'|'+(t.pattern||'')+'|'+(t.color||'')).join('||');
- if(key===previewBuiltKey && previewRows.length===visible.length)return;
- previewBuiltKey=key; previewRows=[]; lastFrames=[]; grid.textContent='';
- if(!visible.length){grid.innerHTML='<div style="display:grid;place-items:center;height:100%;color:#596273;font-size:11px">BELUM ADA POLA SII</div>';return;}
- const rows=visible.length;
- grid.style.gap=rows>6?'5px':rows>3?'8px':'12px';
- visible.forEach((t)=>{
-   const pat=t.pattern||''; if(!pat)return;
-   const row=document.createElement('div'); row.className='led-row off'; row.style.direction='rtl';
-   const color=t.color||'#69a2ff'; row.style.setProperty('--lamp-color',color);
-   const size=Math.max(3,Math.min(18,Math.floor((grid.clientWidth*.96)/Math.max(pat.length,1))-3));
-   row.style.setProperty('--led-size',size+'px');
-   const frag=document.createDocumentFragment(); const els=[];
-   for(let i=0;i<pat.length;i++){
-     const el=document.createElement('div'); el.className='led-dot off'; el.style.setProperty('--lamp-color',color); els.push(el); frag.appendChild(el);
-   }
-   row.appendChild(frag); grid.appendChild(row); previewRows.push({track:t,pattern:pat,els}); lastFrames.push(-1);
- });
-}
-function paint(){
- const grid=$("ledGrid"); if(!grid)return;
- buildPreview();
- if(!previewRows.length)return;
- const now=window.previewTime||0; let anyX=false,anyDim=false,total=0;
- previewRows.forEach((r,idx)=>{
-   const t=r.track, pat=r.pattern; total+=pat.length;
-   const step=Math.max(.001,Number(window.speedOverride)||Number(t.step)||Number(window.currentStep)||.07);
-   const frame=Math.floor(now/step)%pat.length; const ch=pat[frame]||'-';
-   if(frame!==lastFrames[idx]){
-     lastFrames[idx]=frame;
-     const cls=ch==='X'?'on':ch==='x'?'dim':'off';
-     r.els[0]?.parentElement.className='led-row '+cls;
-   }
-   if(ch==='X')anyX=true; else if(ch==='x')anyDim=true;
- });
- const first=previewRows[0]?.track, fp=first?.pattern||'';
- const ff=fp?Math.floor(now/Math.max(.001,Number(first.step)||Number(window.currentStep)||.07))%fp.length:0;
- $("lightState").textContent=anyX?'NYALA':anyDim?'REDUP':'MATI';
- $("ledStatus").textContent=running?'STATUS: SIAP • BERJALAN':'STATUS: SIAP';
- $("ledFrame").textContent=`FRAME: ${fp?ff+1:0}/${fp.length||0}`;
- $("ledTotal").textContent=`POLA AKTIF: ${previewRows.length} • TOTAL LED: ${total}`;
- const br=Number($("brightRange")?.value||100)/100; grid.style.opacity=br;
-}
-
-function togglePreviewFullscreen(){const el=document.querySelector('.preview-shell');if(!document.fullscreenElement)el?.requestFullscreen?.();else document.exitFullscreen?.();}
-
-function startPreview(){
- stopPreview();
- window.previewTime=0;
- running=true;
- const start=performance.now();
- window.previewStart=start;
- function loop(t){
-   if(!running)return;
-   window.previewTime=(t-start)/1000;
-   paint();
-   timer=requestAnimationFrame(loop);
- }
- timer=requestAnimationFrame(loop);
-}
-function quickPreview(){
- stopPreview();
- window.previewTime=0;
- running=true;
- const start=performance.now();
- window.previewStart=start;
- function loop(t){
-   if(!running)return;
-   window.previewTime=(t-start)/1000;
-   paint();
-   timer=requestAnimationFrame(loop);
- }
- timer=requestAnimationFrame(loop);
-}
-function stopPreview(){
- running=false;
- if(timer)cancelAnimationFrame(timer);
- timer=null;
- window.previewTime=0;
- pos=0;
- paint();
-}
-
-$("speedRange")?.addEventListener('input',e=>{$("speedVal").textContent=Number(e.target.value).toFixed(2)+'s';window.speedOverride=Number(e.target.value);paint()});
-$("brightRange")?.addEventListener('input',e=>{$("brightVal").textContent=e.target.value+'%';paint()});
-function clearAll(){db.clear();siiData.clear();stopPreview();progress(0);setStatus("Semua file dibersihkan.");runEmpty()}
-window.previewTracks=[]; window.syncAll=true; window.currentStep=.07; window.previewTime=0;
-function runEmpty(){if($("summary"))$("summary").innerHTML='<div class="muted">Belum ada mod dimuat.</div>';if($("checks"))$("checks").innerHTML="";if($("issues"))$("issues").innerHTML='<span class="muted">Belum ada hasil.</span>';if($("files"))$("files").innerHTML='<span class="muted">Belum ada file.</span>';if($("source"))$("source").textContent="Pilih file SII.";if($("siiSelect"))$("siiSelect").innerHTML="";if($("patternSelect"))$("patternSelect").innerHTML=""}
-runEmpty();
-</script>
 <script>
 (function(){
- const box=document.querySelector('.panel'); if(!box)return;
- box.addEventListener('dragover',e=>{e.preventDefault();box.style.outline='2px solid var(--accent)'});
- box.addEventListener('dragleave',()=>box.style.outline='');
- box.addEventListener('drop',e=>{e.preventDefault();box.style.outline='';if(e.dataTransfer?.files?.length)processFiles([...e.dataTransfer.files])});
+"use strict";
+const state={sii:new Map(),tracks:[],rows:[],running:false,start:0,raf:0};
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));
+function status(msg,cls="muted"){ $("status").className=cls; $("status").textContent=msg; }
+function color(model){
+ const s=String(model||"").toLowerCase();
+ if(s.includes("blue"))return "#36a5ff";
+ if(s.includes("red"))return "#ff405c";
+ if(s.includes("green"))return "#38df7a";
+ if(s.includes("yellow"))return "#ffd447";
+ if(s.includes("orange"))return "#ff9f3f";
+ if(s.includes("white"))return "#f4f7ff";
+ if(s.includes("amber"))return "#ffc04a";
+ return "#5ca9ff";
+}
+function parse(text,name){
+ const patterns=[...text.matchAll(/blink_pattern\s*:\s*"([^"]*)"/gi)].map(m=>m[1].replace(/\s+/g,""));
+ const step=Number((text.match(/blink_step_length\s*:\s*([0-9.]+)/i)||[])[1]||.07);
+ const models=[...text.matchAll(/\bmodel\s*:\s*"([^"]+)"/gi)].map(m=>m[1]);
+ const errs=[];
+ if(!/SiiNunit/i.test(text)) errs.push("Header SiiNunit tidak ditemukan");
+ let a=0,b=0; for(const ch of text){if(ch==="{")a++;else if(ch==="}")b++}
+ if(a!==b) errs.push("Braket SII tidak seimbang");
+ return {name,patterns,step,model:models[0]||"",errors:errs};
+}
+function addSii(name,text){
+ const p=parse(text,name);
+ state.sii.set(name,{text,parsed:p});
+}
+async function importSiiFile(f){
+ const text=await f.text(); addSii(f.webkitRelativePath||f.name,text);
+}
+async function importZip(f){
+ if(!window.JSZip) throw new Error("JSZip tidak termuat. Pastikan jszip.min.js ikut di-upload ke GitHub/Vercel.");
+ const buf=await f.arrayBuffer();
+ let zip;
+ try{zip=await window.JSZip.loadAsync(buf)}catch(e){throw new Error("SCS/ZIP tidak dapat dibuka. Pastikan file bukan RAR/7Z dan tidak rusak.");}
+ const entries=Object.values(zip.files).filter(x=>!x.dir);
+ let found=0;
+ for(const e of entries){
+   if(!/\.sii$/i.test(e.name)) continue;
+   const text=await e.async("text");
+   addSii(e.name,text); found++;
+ }
+ if(!found) throw new Error("ZIP/SCS terbuka, tetapi tidak ada file .sii di dalamnya.");
+ return found;
+}
+async function process(list){
+ try{
+  if(!list.length)return;
+  status("Membaca file...");
+  let imported=0, siiCount=0;
+  for(const f of list){
+   const n=(f.name||"").toLowerCase();
+   if(n.endsWith(".sii")){await importSiiFile(f);imported++;siiCount++}
+   else if(n.endsWith(".scs")||n.endsWith(".zip")){const nfound=await importZip(f);imported++;siiCount+=nfound}
+  }
+  if(!imported)throw new Error("File tidak dikenali. Gunakan .SII, .SCS, atau .ZIP.");
+  rebuild();
+  status("Berhasil import: "+siiCount+" file SII.","ok");
+ }catch(e){
+  console.error(e);
+  status("ERROR: "+e.message,"error");
+  $("issues").innerHTML='<span class="error">'+esc(e.message)+'</span>';
+ }
+}
+function rebuild(){
+ state.tracks=[];
+ for(const [name,v] of state.sii){
+  v.parsed.patterns.forEach((pat,i)=>{
+   if(pat)state.tracks.push({name,index:i,pattern:pat,step:v.parsed.step,color:color(v.parsed.model)});
+  });
+ }
+ const visible=state.tracks.slice(0,14);
+ const grid=$("ledGrid"); grid.innerHTML=""; state.rows=[];
+ if(!visible.length){grid.innerHTML='<div class="muted" style="text-align:center">Tidak ada blink_pattern ditemukan.</div>';return;}
+ const size=Math.max(4,Math.min(16,Math.floor((grid.clientWidth||800)/Math.max(...visible.map(t=>t.pattern.length),1))-3));
+ for(const t of visible){
+  const row=document.createElement("div");row.className="row off";row.style.setProperty("--c",t.color);
+  const s=Math.max(4,Math.min(16,Math.floor((grid.clientWidth||800)/Math.max(t.pattern.length,1))-3));
+  row.style.setProperty("--s",s+"px");
+  const frag=document.createDocumentFragment(),dots=[];
+  for(let i=0;i<t.pattern.length;i++){const d=document.createElement("i");d.className="dot";dots.push(d);frag.appendChild(d)}
+  row.appendChild(frag);grid.appendChild(row);state.rows.push({t,row});
+ }
+ $("files").innerHTML=[...state.sii.keys()].map(x=>"<div style='padding:5px;border-bottom:1px solid #27313d'>"+esc(x)+"</div>").join("");
+ $("issues").innerHTML=[...state.sii.values()].flatMap(v=>v.parsed.errors).length?
+   [...state.sii.values()].flatMap(v=>v.parsed.errors).map(x=>'<div class="error">'+esc(x)+'</div>').join(""):'<span class="ok">✓ SII berhasil dibaca.</span>';
+ paint(0);
+}
+function paint(elapsed){
+ const bright=Number($("bright").value)/100;
+ let total=0,frame=0;
+ state.rows.forEach((r,i)=>{
+   const p=r.t.pattern,step=Math.max(.001,Number($("speed").value)||r.t.step||.07);
+   const f=Math.floor(elapsed/step)%p.length,ch=p[f]||"-";
+   r.row.className="row "+(ch==="X"?"on":ch==="x"?"dim":"off");
+   frame=i===0?f:frame;total+=p.length;
+ });
+ $("ledGrid").style.opacity=bright;
+ const first=state.rows[0]?.t;
+ $("frameText").textContent="FRAME "+(first?frame+1:0)+"/"+(first?.pattern.length||0);
+ $("countText").textContent="POLA "+state.rows.length+" • LED "+total;
+}
+function loop(t){
+ if(!state.running)return;
+ paint((t-state.start)/1000);
+ state.raf=requestAnimationFrame(loop);
+}
+function start(){stop();state.running=true;state.start=performance.now();state.raf=requestAnimationFrame(loop)}
+function stop(){state.running=false;if(state.raf)cancelAnimationFrame(state.raf);state.raf=0;paint(0)}
+function clearAll(){stop();state.sii.clear();state.tracks=[];state.rows=[];$("ledGrid").innerHTML='<div class="muted" style="text-align:center">Belum ada SII</div>';$("files").textContent="Belum ada file."; $("issues").textContent="Belum ada hasil.";status("Siap. Pilih file untuk mulai.")}
+$("siiFile").addEventListener("change",e=>process([...e.target.files]));
+$("zipFile").addEventListener("change",e=>process([...e.target.files]));
+$("folderFile").addEventListener("change",e=>process([...e.target.files]));
+$("runBtn").addEventListener("click",start);$("stopBtn").addEventListener("click",stop);$("clearBtn").addEventListener("click",clearAll);
+$("speed").addEventListener("input",e=>{ $("speedText").textContent=Number(e.target.value).toFixed(2)+"s"; paint((performance.now()-state.start)/1000)});
+$("bright").addEventListener("input",e=>{ $("brightText").textContent=e.target.value+"%"; paint((performance.now()-state.start)/1000)});
+window.addEventListener("resize",()=>{if(state.sii.size)rebuild()});
+window.addEventListener("error",e=>status("JavaScript error: "+e.message,"error"));
 })();
 </script>
 </body>
