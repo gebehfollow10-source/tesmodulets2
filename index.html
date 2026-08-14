@@ -159,6 +159,7 @@ function findRef(ref){
  return false;
 }
 function run(){
+ try {
  const names=[...db.keys()].sort((a,b)=>a.localeCompare(b,undefined,{numeric:true}));
  let all=[],totalBlocks=0,totalPatterns=0;
  for(const [name,text] of siiData){const p=parseSii(text);all.push([name,p]);totalBlocks+=p.blocks;totalPatterns+=p.pats.length}
@@ -169,9 +170,8 @@ function run(){
  <div class="card"><div class="small">PATTERN</div><h2>${totalPatterns}</h2></div></div>`;
  const issues=all.flatMap(([n,p])=>p.issues.map(x=>[n,...x]));
  $("issues").innerHTML=issues.length?issues.map(x=>`<div style="padding:8px;border-bottom:1px solid var(--line)"><b class="${x[1]==='error'?'bad':'warn'}">${x[1].toUpperCase()}</b> — <b>${esc(x[0])}</b><br>${esc(x[2])}</div>`).join(""):'<span class="ok">✓ Tidak ada error dasar.</span>';
- $("files").innerHTML=names.map(n=>`<div style="padding:5px;border-bottom:1px solid var(--line)">${esc(n)}</div>`).join("");
- const ss=$("siiSelect"); ss.innerHTML=[...siiData.keys()].map(n=>`<option>${esc(n)}</option>`).join("");
- ss.onchange=()=>showSource(ss.value); if(ss.value)showSource(ss.value);
+ const filesBox=$("files"); if(filesBox) filesBox.innerHTML=names.map(n=>`<div style="padding:5px;border-bottom:1px solid var(--line)">${esc(n)}</div>`).join("");
+ const ss=$("siiSelect"); if(ss){ ss.innerHTML=[...siiData.keys()].map(n=>`<option>${esc(n)}</option>`).join(""); ss.onchange=()=>showSource(ss.value); if(ss.value)showSource(ss.value); }
  const checkCounts={valid:all.filter(x=>!x[1].issues.some(i=>i[0]==="error")).length,err:issues.filter(x=>x[1]==="error").length,warn:issues.filter(x=>x[1]==="warning").length};
  $("checks").innerHTML=`
  <div class="card"><div class="small">STRUKTUR SII</div><h2 class="${checkCounts.err?'bad':'ok'}">${checkCounts.err?'✕':'✓'}</h2><div>${checkCounts.err} error</div></div>
@@ -179,8 +179,9 @@ function run(){
  <div class="card"><div class="small">FILE VALID</div><h2 class="ok">${checkCounts.valid}</h2><div>dari ${all.length} SII</div></div>`;
  updatePatterns(all);
  setStatus(`Selesai: ${names.length} file dimuat.`);
+ } catch(e) { console.error(e); setStatus("Gagal memproses hasil import: "+e.message); $("issues").innerHTML='<div class="bad" style="padding:10px">'+esc(e.message)+"</div>'; }
 }
-function showSource(n){$("source").textContent=siiData.get(n)||"Pilih file SII."}
+function showSource(n){const el=$("source"); if(el) el.textContent=siiData.get(n)||"Pilih file SII."}
 function colorFromModel(model){
  const m=String(model||'').toLowerCase();
  if(m.includes('blue'))return '#3aa0ff';
@@ -310,7 +311,7 @@ $("speedRange")?.addEventListener('input',e=>{$("speedVal").textContent=Number(e
 $("brightRange")?.addEventListener('input',e=>{$("brightVal").textContent=e.target.value+'%';paint()});
 function clearAll(){db.clear();siiData.clear();stopPreview();progress(0);setStatus("Semua file dibersihkan.");runEmpty()}
 window.previewTracks=[]; window.syncAll=true; window.currentStep=.07; window.previewTime=0;
-function runEmpty(){$("summary").innerHTML='<div class="muted">Belum ada mod dimuat.</div>';$("checks").innerHTML="";$("issues").innerHTML='<span class="muted">Belum ada hasil.</span>';$("files").innerHTML='<span class="muted">Belum ada file.</span>';$("source").textContent="Pilih file SII."; $("siiSelect").innerHTML="";$("patternSelect").innerHTML=""}
+function runEmpty(){if($("summary"))$("summary").innerHTML='<div class="muted">Belum ada mod dimuat.</div>';if($("checks"))$("checks").innerHTML="";if($("issues"))$("issues").innerHTML='<span class="muted">Belum ada hasil.</span>';if($("files"))$("files").innerHTML='<span class="muted">Belum ada file.</span>';if($("source"))$("source").textContent="Pilih file SII.";if($("siiSelect"))$("siiSelect").innerHTML="";if($("patternSelect"))$("patternSelect").innerHTML=""}
 runEmpty();
 </script>
 <script>
