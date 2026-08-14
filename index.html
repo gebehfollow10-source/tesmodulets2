@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>SCS Mod Tester</title>
-<script src="jszip.min.js"></script>
+<script src="jszip.min.js"></script><script>if(!window.JSZip){document.write('<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"><\/script>')}</script>
 <style>
 :root{--bg:#0b1020;--panel:#121a2d;--panel2:#18233b;--text:#edf3ff;--muted:#98a7c4;--line:#2b3b60;--accent:#69a2ff;--ok:#38d27c;--bad:#ff667d;--warn:#ffc857}
 *{box-sizing:border-box}body{margin:0;background:linear-gradient(135deg,#080d19,#101b31);color:var(--text);font:14px system-ui,Arial,sans-serif}
@@ -98,29 +98,47 @@ function setStatus(x){$("status").textContent=x}
 function progress(x){$("bar").style.width=x+"%"}
 function addFile(name,text){db.set(name,text); if(/\.sii$/i.test(name))siiData.set(name,text)}
 async function readArchive(file){
- if(!window.JSZip) throw Error("JSZip lokal tidak tersedia. Pastikan jszip.min.js berada satu folder dengan index.html.");
- const zip=await JSZip.loadAsync(file);
- const entries=Object.values(zip.files).filter(x=>!x.dir);
- for(let i=0;i<entries.length;i++){
-   const e=entries[i], name=e.name;
-   const text=await e.async("text");
-   addFile(name,text); progress(Math.round((i+1)/entries.length*100));
- }
+  if(!window.JSZip) throw Error("JSZip tidak tersedia. Jika dibuka dari GitHub Pages, pastikan jszip.min.js ada di folder yang sama dengan index.html.");
+  const buf=await file.arrayBuffer();
+  let zip;
+  try{ zip=await JSZip.loadAsync(buf,{checkCRC32:false,createFolders:false}); }
+  catch(err){ throw Error("File "+file.name+" bukan ZIP/SCS yang bisa dibaca browser, atau arsip rusak."); }
+  const entries=Object.values(zip.files).filter(x=>!x.dir);
+  let count=0;
+  for(const e of entries){
+    const name=e.name;
+    // Hanya baca teks yang relevan agar import SCS besar tidak membuat browser lag.
+    if(/\.(sii|sii\.bak|txt)$/i.test(name)){
+      const text=await e.async("text");
+      addFile(name,text); count++;
+    }
+  }
+  if(!count) throw Error("Tidak menemukan file .sii di dalam "+file.name);
+}
+async function readPlain(file){
+  const text=await file.text();
+  addFile(file.webkitRelativePath||file.name,text);
 }
 async function processFiles(list){
- try{
-   for(let i=0;i<list.length;i++){
-     const f=list[i];
-     if(/\.scs$|\.zip$/i.test(f.name)) await readArchive(f);
-     else addFile(f.webkitRelativePath||f.name,await f.text());
-   }
-   run();
- }catch(e){setStatus("Gagal membaca mod: "+e.message)}
+  try{
+    setStatus("Membaca "+list.length+" file...");
+    let imported=0;
+    for(const f of list){
+      const lower=(f.name||"").toLowerCase();
+      if(lower.endsWith('.scs')||lower.endsWith('.zip')){ await readArchive(f); imported++; }
+      else if(lower.endsWith('.sii')){ await readPlain(f); imported++; }
+    }
+    if(!imported) throw Error("Format file tidak didukung. Pilih .SII, .SCS, atau .ZIP.");
+    run();
+  }catch(e){
+    console.error(e);
+    setStatus("Gagal import: "+e.message);
+    $("issues").innerHTML='<div class="bad" style="padding:10px">'+esc(e.message)+"</div>";
+  }
 }
 $("sii").onchange=e=>processFiles([...e.target.files]);
 $("archive").onchange=e=>processFiles([...e.target.files]);
 $("folder").onchange=e=>processFiles([...e.target.files]);
-
 function parseSii(text){
  const lines=text.split(/\r?\n/), issues=[];
  if(!/^\s*SiiNunit\b/m.test(text))issues.push(["error","Header SiiNunit tidak ditemukan"]);
@@ -294,6 +312,14 @@ function clearAll(){db.clear();siiData.clear();stopPreview();progress(0);setStat
 window.previewTracks=[]; window.syncAll=true; window.currentStep=.07; window.previewTime=0;
 function runEmpty(){$("summary").innerHTML='<div class="muted">Belum ada mod dimuat.</div>';$("checks").innerHTML="";$("issues").innerHTML='<span class="muted">Belum ada hasil.</span>';$("files").innerHTML='<span class="muted">Belum ada file.</span>';$("source").textContent="Pilih file SII."; $("siiSelect").innerHTML="";$("patternSelect").innerHTML=""}
 runEmpty();
+</script>
+<script>
+(function(){
+ const box=document.querySelector('.panel'); if(!box)return;
+ box.addEventListener('dragover',e=>{e.preventDefault();box.style.outline='2px solid var(--accent)'});
+ box.addEventListener('dragleave',()=>box.style.outline='');
+ box.addEventListener('drop',e=>{e.preventDefault();box.style.outline='';if(e.dataTransfer?.files?.length)processFiles([...e.dataTransfer.files])});
+})();
 </script>
 </body>
 </html>
