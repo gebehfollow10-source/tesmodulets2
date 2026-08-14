@@ -15,21 +15,21 @@ button:hover,.filebtn:hover{border-color:#5b6878}.filebtn input{display:none}.to
 .preview{background:#05070a;border:1px solid #222a34;border-radius:12px;padding:10px}
 .controls{display:grid;grid-template-columns:1fr 1fr;gap:10px}.controls input{width:100%}
 .actions{display:flex;gap:8px;margin-top:8px}.actions button{flex:1}.run{background:#df1830;border-color:#df1830}
-.board{margin:10px auto 0;background:#020304;border:1px solid #1e252d;border-radius:9px;padding:12px;min-height:320px;max-width:430px;overflow:hidden}
-#ledGrid{display:flex;flex-direction:row;justify-content:center;align-items:center;gap:12px;min-height:290px;height:290px}
-.row{display:flex;flex-direction:column;gap:3px;height:100%;justify-content:center;align-items:center}
+.board{margin:8px auto 0;background:#020304;border:1px solid #1e252d;border-radius:9px;padding:5px;min-height:300px;max-width:430px;overflow:hidden}
+#ledGrid{display:flex;flex-direction:row;justify-content:center;align-items:center;gap:2px;min-height:290px;height:290px}
+.row{display:flex;flex-direction:column;gap:1px;height:100%;justify-content:center;align-items:center;min-width:0}
 .dot{width:var(--s);height:var(--s);flex:0 0 var(--s);border-radius:50%;background:#111820}
 .row.on .dot{background:var(--c);box-shadow:0 0 4px var(--c),0 0 11px var(--c)}
 .row.dim .dot{background:var(--c);opacity:.45}
 .meta{display:flex;justify-content:space-between;color:#7d8998;font-size:11px;margin-top:8px}
 #issues{white-space:pre-wrap}.filelist{max-height:240px;overflow:auto}
-@media(max-width:650px){.controls{grid-template-columns:1fr}.wrap{padding:10px}.board{min-height:300px;max-width:360px}.ledGrid{min-height:270px;height:270px}}
+@media(max-width:650px){.controls{grid-template-columns:1fr}.wrap{padding:10px}.board{min-height:300px;max-width:360px;padding:3px}.ledGrid{min-height:290px;height:290px;gap:1px}.row{gap:0}}
 </style>
 </head>
 <body>
 <div class="wrap">
 <h1>🚛 SCS Mod Tester</h1>
-<div class="muted">Import SII / SCS / ZIP langsung di browser. Maksimal 14 baris preview.</div>
+<div class="muted">Urutan LED mengikuti posisi asli di file SII, termasuk karakter angka dan huruf. Maksimal 20 baris preview.</div>
 
 <section class="panel">
 <div class="toolbar">
@@ -52,7 +52,7 @@ button:hover,.filebtn:hover{border-color:#5b6878}.filebtn input{display:none}.to
 <button id="runBtn" class="run">▶ JALANKAN</button><button id="stopBtn">■ STOP</button>
 </div>
 <div class="board"><div id="ledGrid"><div class="muted" style="text-align:center">Belum ada SII</div></div></div>
-<div class="meta"><span id="frameText">FRAME 0/0</span><span id="countText">POLA 0 • LED 0</span></div>
+<div class="meta"><span id="frameText">FRAME 0/0</span><span id="countText">POLA 0 • LED 0</span></div><div class="muted" style="font-size:10px;margin-top:4px">Posisi mengikuti urutan file SII • angka/huruf tidak diacak</div>
 </div>
 </section>
 
@@ -85,7 +85,7 @@ function color(model){
  return "#5ca9ff";
 }
 function parse(text,name){
- const patterns=[...text.matchAll(/blink_pattern\s*:\s*"([^"]*)"/gi)].map(m=>m[1].replace(/\s+/g,""));
+ const patterns=[...text.matchAll(/blink_pattern\s*:\s*"([^"]*)"/gi)].map(m=>m[1].replace(/[\r\n]/g,""));
  const step=Number((text.match(/blink_step_length\s*:\s*([0-9.]+)/i)||[])[1]||.07);
  const models=[...text.matchAll(/\bmodel\s*:\s*"([^"]+)"/gi)].map(m=>m[1]);
  const errs=[];
@@ -142,13 +142,13 @@ function rebuild(){
    if(pat)state.tracks.push({name,index:i,pattern:pat,step:v.parsed.step,color:color(v.parsed.model)});
   });
  }
- const visible=state.tracks.slice(0,14);
+ const visible=state.tracks.slice(0,20);
  const grid=$("ledGrid"); grid.innerHTML=""; state.rows=[];
  if(!visible.length){grid.innerHTML='<div class="muted" style="text-align:center">Tidak ada blink_pattern ditemukan.</div>';return;}
- const size=Math.max(4,Math.min(16,Math.floor((grid.clientHeight||290)/Math.max(...visible.map(t=>t.pattern.length),1))-3));
+ const size=Math.max(3,Math.min(12,Math.floor((grid.clientHeight||290)/Math.max(...visible.map(t=>t.pattern.length),1))-1));
  for(const t of visible){
   const row=document.createElement("div");row.className="row off";row.style.setProperty("--c",t.color);
-  const s=Math.max(4,Math.min(16,Math.floor((grid.clientHeight||290)/Math.max(t.pattern.length,1))-3));
+  const s=Math.max(3,Math.min(12,Math.floor((grid.clientHeight||290)/Math.max(t.pattern.length,1))-1));
   row.style.setProperty("--s",s+"px");
   const frag=document.createDocumentFragment(),dots=[];
   for(let i=0;i<t.pattern.length;i++){const d=document.createElement("i");d.className="dot";dots.push(d);frag.appendChild(d)}
@@ -164,7 +164,7 @@ function paint(elapsed){
  let total=0,frame=0;
  state.rows.forEach((r,i)=>{
    const p=r.t.pattern,step=Math.max(.001,Number($("speed").value)||r.t.step||.07);
-   const f=Math.floor(elapsed/step)%p.length,ch=p[f]||"-";
+   const f=Math.floor(elapsed/step)%p.length,ch=p.charAt(f)||"-";
    r.row.className="row "+(ch==="X"?"on":ch==="x"?"dim":"off");
    frame=i===0?f:frame;total+=p.length;
  });
